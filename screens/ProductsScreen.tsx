@@ -268,12 +268,12 @@ export default function ProductsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, flexDirection: 'row' },
-  sidebar: { width: 200, backgroundColor: '#1e1e2e', padding: 12 },
+  sidebar: { width: 200, backgroundColor: '#1e1e2e', padding: 12, justifyContent: 'space-between' },
   sidebarTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
   categoryItem: { padding: 12, borderRadius: 8, marginBottom: 6 },
   categorySelected: { backgroundColor: '#4a90d9' },
   categoryText: { color: '#fff', fontSize: 16 },
-  main: { flex: 1, padding: 16, backgroundColor: '#f5f5f5' },
+  main: { flex: 1, padding: 16, backgroundColor: '#f5f5f5', justifyContent: 'space-between' },
   mainTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
   productCard: { flex: 1, margin: 6, backgroundColor: '#fff', borderRadius: 10, padding: 12, alignItems: 'center', elevation: 2 },
   productName: { fontSize: 16, fontWeight: 'bold', textAlign: 'center' },

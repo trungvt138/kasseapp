@@ -8,7 +8,7 @@ type Product = { id: number; name: string; price: number; category_id: number };
 type CartItem = { product: Product; quantity: number };
 
 export default function KasseScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -145,6 +145,7 @@ export default function KasseScreen() {
             <TouchableOpacity
               style={[styles.checkoutBtn, cart.length === 0 && styles.checkoutBtnDisabled]}
               disabled={cart.length === 0}
+              onPress={() => navigation.navigate('Checkout' as never, { cart, total } as never)}
             >
               <Text style={styles.checkoutBtnText}>Checkout →</Text>
             </TouchableOpacity>

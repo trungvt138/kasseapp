@@ -33,6 +33,10 @@ export const initDatabase = () => {
       quantity INTEGER NOT NULL,
       FOREIGN KEY (order_id) REFERENCES orders(id)
     );
+
+    CREATE TABLE IF NOT EXISTS exported_months (
+      year_month TEXT PRIMARY KEY
+    );
   `);
 };
 

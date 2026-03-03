@@ -5,6 +5,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
 import db from '../database/db';
+import { seedTestData, clearAllData } from '../utils/testDataSeeder';
 
 type Order = { id: number; total: number; cash_given: number; change: number; created_at: string };
 type OrderItem = { product_name: string; product_price: number; quantity: number };
@@ -12,6 +13,7 @@ type MonthRow = { month: string; exported: boolean };
 
 export default function ExportScreen() {
   const [months, setMonths] = useState<MonthRow[]>([]);
+  const [seeding, setSeeding] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -162,6 +164,52 @@ export default function ExportScreen() {
     );
   };
 
+  const handleSeed = () => {
+    Alert.alert(
+      'Seed Test Data',
+      'Insert 15 categories, 150 products, and 5 000 orders across 13 months?\n\nThis may take a few seconds.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Seed', onPress: () => {
+            setSeeding(true);
+            // Run after next frame so the UI can update
+            setTimeout(() => {
+              try {
+                const result = seedTestData();
+                loadMonths();
+                Alert.alert(
+                  'Done',
+                  `Inserted:\n• ${result.categories} categories\n• ${result.products} products\n• ${result.orders} orders\n• ${result.orderItems} order items\n\nTime: ${result.durationMs} ms`
+                );
+              } catch (e: any) {
+                Alert.alert('Error', e?.message ?? 'Seeding failed');
+              } finally {
+                setSeeding(false);
+              }
+            }, 50);
+          }
+        },
+      ]
+    );
+  };
+
+  const handleClearAll = () => {
+    Alert.alert(
+      'Clear All Data',
+      'This deletes EVERYTHING — all orders, products, and categories. Cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear', style: 'destructive', onPress: () => {
+            clearAllData();
+            loadMonths();
+          }
+        },
+      ]
+    );
+  };
+
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   return (
@@ -193,11 +241,28 @@ export default function ExportScreen() {
           </View>
         )}
         ListFooterComponent={
-          months.length > 0 ? (
-            <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-              <Text style={styles.deleteBtnText}>🗑️ Delete Old Data</Text>
-            </TouchableOpacity>
-          ) : null
+          <View>
+            {months.length > 0 && (
+              <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+                <Text style={styles.deleteBtnText}>🗑️ Delete Old Data</Text>
+              </TouchableOpacity>
+            )}
+            <View style={styles.devSection}>
+              <Text style={styles.devTitle}>🔧 Dev Tools</Text>
+              <View style={styles.devRow}>
+                <TouchableOpacity
+                  style={[styles.devBtn, styles.devBtnSeed, seeding && styles.devBtnDisabled]}
+                  onPress={handleSeed}
+                  disabled={seeding}
+                >
+                  <Text style={styles.devBtnText}>{seeding ? 'Seeding…' : '⚡ Seed 5 000 Orders'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.devBtn, styles.devBtnClear]} onPress={handleClearAll}>
+                  <Text style={styles.devBtnText}>💣 Clear All Data</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
         }
       />
     </View>
@@ -227,4 +292,12 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   empty: { color: '#aaa', fontSize: 16, textAlign: 'center', marginTop: 40 },
+  devSection: { marginTop: 24, borderTopWidth: 1, borderTopColor: '#ddd', paddingTop: 16 },
+  devTitle: { fontSize: 13, fontWeight: 'bold', color: '#888', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 },
+  devRow: { flexDirection: 'row', gap: 10 },
+  devBtn: { flex: 1, padding: 14, borderRadius: 10, alignItems: 'center' },
+  devBtnSeed: { backgroundColor: '#6c3483' },
+  devBtnClear: { backgroundColor: '#784212' },
+  devBtnDisabled: { opacity: 0.5 },
+  devBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
 });

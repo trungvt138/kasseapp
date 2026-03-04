@@ -18,7 +18,7 @@ export default function ReceiptScreen() {
     <View style={styles.container}>
       <View style={styles.receipt}>
         <Text style={styles.shopName}>🛒 Kasse</Text>
-        <Text style={styles.meta}>Order #{orderId}</Text>
+        <Text style={styles.meta}>Đơn #{orderId}</Text>
         <Text style={styles.meta}>{dateStr} {timeStr}</Text>
 
         <View style={styles.divider} />
@@ -35,27 +35,27 @@ export default function ReceiptScreen() {
         <View style={styles.divider} />
 
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>Total</Text>
+          <Text style={styles.rowLabel}>Tổng Cộng</Text>
           <Text style={styles.rowValue}>€{total.toFixed(2)}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>Cash</Text>
+          <Text style={styles.rowLabel}>Tiền Mặt</Text>
           <Text style={styles.rowValue}>€{cash.toFixed(2)}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>Change</Text>
+          <Text style={styles.rowLabel}>Tiền Thối</Text>
           <Text style={[styles.rowValue, { color: '#27ae60' }]}>€{change.toFixed(2)}</Text>
         </View>
 
         <View style={styles.divider} />
 
-        <Text style={styles.thanks}>Thank you! 😊</Text>
+        <Text style={styles.thanks}>Cảm ơn quý khách! 😊</Text>
 
         <TouchableOpacity
           style={styles.doneBtn}
           onPress={() => navigation.navigate('Kasse' as never)}
         >
-          <Text style={styles.doneBtnText}>✅ Done — New Order</Text>
+          <Text style={styles.doneBtnText}>✅ Xong — Đơn Mới</Text>
         </TouchableOpacity>
       </View>
     </View>

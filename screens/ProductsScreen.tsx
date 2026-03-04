@@ -49,9 +49,9 @@ export default function ProductsScreen() {
   };
 
   const deleteCategory = (id: number) => {
-    Alert.alert('Delete Category', 'This will also delete all products in this category!', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => {
+    Alert.alert('Xóa Danh Mục', 'Thao tác này sẽ xóa tất cả sản phẩm trong danh mục!', [
+      { text: 'Hủy', style: 'cancel' },
+      { text: 'Xóa', style: 'destructive', onPress: () => {
         db.runSync('DELETE FROM products WHERE category_id = ?', [id]);
         db.runSync('DELETE FROM categories WHERE id = ?', [id]);
         loadCategories();
@@ -129,9 +129,9 @@ export default function ProductsScreen() {
 // };
 
   const deleteProduct = (id: number) => {
-    Alert.alert('Delete Product', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => {
+    Alert.alert('Xóa Sản Phẩm', 'Bạn có chắc không?', [
+      { text: 'Hủy', style: 'cancel' },
+      { text: 'Xóa', style: 'destructive', onPress: () => {
         db.runSync('DELETE FROM products WHERE id = ?', [id]);
         loadProducts();
       }}
@@ -142,11 +142,17 @@ export default function ProductsScreen() {
     ? products.filter(p => p.category_id === selectedCategory)
     : products;
 
+  const COLS = 3;
+  const rem = filteredProducts.length % COLS;
+  const paddedProducts = rem === 0
+    ? filteredProducts
+    : [...filteredProducts, ...Array(COLS - rem).fill({ id: -1 } as Product)];
+
   return (
     <View style={styles.container}>
       {/* Left: Categories */}
       <View style={styles.sidebar}>
-        <Text style={styles.sidebarTitle}>Categories</Text>
+        <Text style={styles.sidebarTitle}>Danh Mục</Text>
         <FlatList
           data={categories}
           keyExtractor={item => item.id.toString()}
@@ -161,31 +167,33 @@ export default function ProductsScreen() {
           )}
         />
         <TouchableOpacity style={styles.addButton} onPress={() => setShowCategoryModal(true)}>
-          <Text style={styles.addButtonText}>+ Add Category</Text>
+          <Text style={styles.addButtonText}>+ Thêm Danh Mục</Text>
         </TouchableOpacity>
       </View>
 
       {/* Right: Products */}
       <View style={styles.main}>
-        <Text style={styles.mainTitle}>Products</Text>
+        <Text style={styles.mainTitle}>Sản Phẩm</Text>
         <FlatList
-          data={filteredProducts}
-          keyExtractor={item => item.id.toString()}
-          numColumns={3}
-          renderItem={({ item }) => (
-            <View style={styles.productCard}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.productPrice}>€{item.price.toFixed(2)}</Text>
-              <View style={styles.productActions}>
-                <TouchableOpacity onPress={() => openEditProduct(item)}>
-                  <Text style={styles.editBtn}>✏️</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => deleteProduct(item.id)}>
-                  <Text style={styles.deleteBtn}>🗑️</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+          data={paddedProducts}
+          keyExtractor={(item, i) => item.id === -1 ? `sp-${i}` : item.id.toString()}
+          numColumns={COLS}
+          renderItem={({ item }) =>
+            item.id === -1
+              ? <View style={[styles.productCard, styles.productCardSpacer]} />
+              : <View style={styles.productCard}>
+                  <Text style={styles.productName}>{item.name}</Text>
+                  <Text style={styles.productPrice}>€{item.price.toFixed(2)}</Text>
+                  <View style={styles.productActions}>
+                    <TouchableOpacity onPress={() => openEditProduct(item)}>
+                      <Text style={styles.editBtn}>✏️</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => deleteProduct(item.id)}>
+                      <Text style={styles.deleteBtn}>🗑️</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+          }
         />
         <TouchableOpacity 
           style={[styles.addButton, categories.length === 0 && { backgroundColor: '#aaa' }]} 
@@ -193,7 +201,7 @@ export default function ProductsScreen() {
           disabled={categories.length === 0}
         >
           <Text style={styles.addButtonText}>
-            {categories.length === 0 ? 'Add a category first!' : '+ Add Product'}
+            {categories.length === 0 ? 'Thêm danh mục trước!' : '+ Thêm Sản Phẩm'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -202,19 +210,19 @@ export default function ProductsScreen() {
       <Modal visible={showCategoryModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
-            <Text style={styles.modalTitle}>New Category</Text>
+            <Text style={styles.modalTitle}>Danh Mục Mới</Text>
             <TextInput
               style={styles.input}
-              placeholder="Category name"
+              placeholder="Tên danh mục"
               value={categoryName}
               onChangeText={setCategoryName}
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowCategoryModal(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>Hủy</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveBtn} onPress={addCategory}>
-                <Text style={styles.saveBtnText}>Save</Text>
+                <Text style={styles.saveBtnText}>Lưu</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -225,21 +233,21 @@ export default function ProductsScreen() {
       <Modal visible={showProductModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
-            <Text style={styles.modalTitle}>{editingProduct ? 'Edit Product' : 'New Product'}</Text>
+            <Text style={styles.modalTitle}>{editingProduct ? 'Chỉnh Sửa Sản Phẩm' : 'Sản Phẩm Mới'}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Product name"
+              placeholder="Tên sản phẩm"
               value={productName}
               onChangeText={setProductName}
             />
             <TextInput
               style={styles.input}
-              placeholder="Price (e.g. 3.50)"
+              placeholder="Giá (vd: 3.50)"
               value={productPrice}
               onChangeText={setProductPrice}
               keyboardType="decimal-pad"
             />
-            <Text style={styles.label}>Category:</Text>
+            <Text style={styles.label}>Danh Mục:</Text>
             <View style={styles.categoryPicker}>
               {categories.map(cat => (
                 <TouchableOpacity
@@ -253,10 +261,10 @@ export default function ProductsScreen() {
             </View>
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowProductModal(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>Hủy</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveBtn} onPress={saveProduct}>
-                <Text style={styles.saveBtnText}>Save</Text>
+                <Text style={styles.saveBtnText}>Lưu</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -275,7 +283,8 @@ const styles = StyleSheet.create({
   categoryText: { color: '#fff', fontSize: 16 },
   main: { flex: 1, padding: 16, backgroundColor: '#f5f5f5', justifyContent: 'space-between' },
   mainTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
-  productCard: { flex: 1, margin: 6, backgroundColor: '#fff', borderRadius: 10, padding: 12, alignItems: 'center', elevation: 2 },
+  productCard: { flex: 1, margin: 6, backgroundColor: '#fff', borderRadius: 12, padding: 10, alignItems: 'center', justifyContent: 'center', elevation: 2, height: 110 },
+  productCardSpacer: { backgroundColor: 'transparent', elevation: 0 },
   productName: { fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
   productPrice: { fontSize: 14, color: '#4a90d9', marginTop: 4 },
   productActions: { flexDirection: 'row', gap: 12, marginTop: 8 },

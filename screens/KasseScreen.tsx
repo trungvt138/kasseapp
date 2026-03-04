@@ -36,6 +36,12 @@ export default function KasseScreen() {
     ? products.filter(p => p.category_id === selectedCategory)
     : products;
 
+  const COLS = 4;
+  const rem = filteredProducts.length % COLS;
+  const paddedProducts = rem === 0
+    ? filteredProducts
+    : [...filteredProducts, ...Array(COLS - rem).fill({ id: -1 } as Product)];
+
   const addToCart = (product: Product) => {
     setCart(prev => {
       const existing = prev.find(i => i.product.id === product.id);
@@ -64,13 +70,13 @@ export default function KasseScreen() {
     <View style={styles.container}>
       {/* Top bar */}
       <View style={styles.topBar}>
-        <Text style={styles.title}>🛒 Kasse</Text>
+        <Text style={styles.title}>🛒 Thu Ngân</Text>
         <View style={styles.topButtons}>
           <TouchableOpacity style={styles.navBtn} onPress={() => navigation.navigate('Products' as never)}>
-            <Text style={styles.navBtnText}>📦 Products</Text>
+            <Text style={styles.navBtnText}>📦 Sản Phẩm</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navBtn} onPress={() => navigation.navigate('History' as never)}>
-            <Text style={styles.navBtnText}>📋 History</Text>
+            <Text style={styles.navBtnText}>📋 Lịch Sử</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -95,27 +101,29 @@ export default function KasseScreen() {
 
           {/* Product grid */}
           <FlatList
-            data={filteredProducts}
-            keyExtractor={item => item.id.toString()}
-            numColumns={4}
+            data={paddedProducts}
+            keyExtractor={(item, i) => item.id === -1 ? `sp-${i}` : item.id.toString()}
+            numColumns={COLS}
             contentContainerStyle={styles.productGrid}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={styles.productCard} onPress={() => addToCart(item)}>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productPrice}>€{item.price.toFixed(2)}</Text>
-              </TouchableOpacity>
-            )}
+            renderItem={({ item }) =>
+              item.id === -1
+                ? <View style={[styles.productCard, styles.productCardSpacer]} />
+                : <TouchableOpacity style={styles.productCard} onPress={() => addToCart(item)}>
+                    <Text style={styles.productName}>{item.name}</Text>
+                    <Text style={styles.productPrice}>€{item.price.toFixed(2)}</Text>
+                  </TouchableOpacity>
+            }
             ListEmptyComponent={
-              <Text style={styles.placeholder}>No products. Add some in Products screen!</Text>
+              <Text style={styles.placeholder}>Chưa có sản phẩm. Thêm ở màn hình Sản Phẩm!</Text>
             }
           />
         </View>
 
         {/* Right: Cart */}
         <View style={styles.cartPanel}>
-          <Text style={styles.panelTitle}>🧾 Order</Text>
+          <Text style={styles.panelTitle}>🧾 Đơn Hàng</Text>
           <ScrollView style={styles.cartList}>
-            {cart.length === 0 && <Text style={styles.placeholder}>Cart is empty</Text>}
+            {cart.length === 0 && <Text style={styles.placeholder}>Giỏ hàng trống</Text>}
             {cart.map(item => (
               <View key={item.product.id} style={styles.cartItem}>
                 <View style={styles.cartItemInfo}>
@@ -138,16 +146,16 @@ export default function KasseScreen() {
           <View style={styles.cartFooter}>
             {cart.length > 0 && (
               <TouchableOpacity style={styles.clearBtn} onPress={clearCart}>
-                <Text style={styles.clearBtnText}>🗑️ Clear</Text>
+                <Text style={styles.clearBtnText}>🗑️ Xóa</Text>
               </TouchableOpacity>
             )}
-            <Text style={styles.total}>Total: €{total.toFixed(2)}</Text>
+            <Text style={styles.total}>Tổng: €{total.toFixed(2)}</Text>
             <TouchableOpacity
               style={[styles.checkoutBtn, cart.length === 0 && styles.checkoutBtnDisabled]}
               disabled={cart.length === 0}
               onPress={() => navigation.navigate('Checkout' as never, { cart, total } as never)}
             >
-              <Text style={styles.checkoutBtnText}>Checkout →</Text>
+              <Text style={styles.checkoutBtnText}>Thanh Toán →</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -171,7 +179,8 @@ const styles = StyleSheet.create({
   categoryTabText: { fontSize: 15, color: '#555' },
   categoryTabTextSelected: { color: '#fff', fontWeight: 'bold' },
   productGrid: { padding: 12 },
-  productCard: { flex: 1, margin: 6, backgroundColor: '#fff', borderRadius: 12, padding: 16, alignItems: 'center', elevation: 2, minHeight: 90 },
+  productCard: { flex: 1, margin: 6, backgroundColor: '#fff', borderRadius: 12, padding: 12, alignItems: 'center', justifyContent: 'center', elevation: 2, height: 110 },
+  productCardSpacer: { backgroundColor: 'transparent', elevation: 0 },
   productName: { fontSize: 15, fontWeight: 'bold', textAlign: 'center' },
   productPrice: { fontSize: 14, color: '#4a90d9', marginTop: 6 },
   placeholder: { color: '#aaa', fontSize: 16, padding: 20 },

@@ -49,7 +49,7 @@ export default function HistoryScreen() {
     <View style={styles.container}>
       {/* Left: Order list */}
       <View style={styles.sidebar}>
-        <Text style={styles.sidebarTitle}>📋 Sales History</Text>
+        <Text style={styles.sidebarTitle}>📋 Lịch Sử Bán Hàng</Text>
 
         <View style={styles.periodTabs}>
           {(['daily', 'monthly', 'yearly'] as Period[]).map(p => (
@@ -59,14 +59,14 @@ export default function HistoryScreen() {
               onPress={() => loadOrders(p)}
             >
               <Text style={[styles.periodTabText, activePeriod === p && styles.periodTabTextActive]}>
-                {p.charAt(0).toUpperCase() + p.slice(1)}
+                {{ daily: 'Hôm Nay', monthly: 'Tháng Này', yearly: 'Năm Nay' }[p]}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={styles.revenueBadge}>
-          <Text style={styles.revenueLabel}>Total Revenue</Text>
+          <Text style={styles.revenueLabel}>Tổng Doanh Thu</Text>
           <Text style={styles.revenueAmount}>€{totalRevenue.toFixed(2)}</Text>
         </View>
 
@@ -78,16 +78,16 @@ export default function HistoryScreen() {
               style={[styles.orderItem, selectedOrder?.id === item.id && styles.orderItemSelected]}
               onPress={() => selectOrder(item)}
             >
-              <Text style={styles.orderId}>Order #{item.id}</Text>
+              <Text style={styles.orderId}>Đơn #{item.id}</Text>
               <Text style={styles.orderTotal}>€{item.total.toFixed(2)}</Text>
               <Text style={styles.orderDate}>{item.created_at}</Text>
             </TouchableOpacity>
           )}
-          ListEmptyComponent={<Text style={styles.empty}>No orders in this period</Text>}
+          ListEmptyComponent={<Text style={styles.empty}>Không có đơn hàng trong kỳ này</Text>}
         />
 
         <TouchableOpacity style={styles.exportNavBtn} onPress={() => navigation.navigate('Export')}>
-          <Text style={styles.exportNavBtnText}>📦 Export & Archive</Text>
+          <Text style={styles.exportNavBtnText}>📦 Xuất & Lưu Trữ</Text>
         </TouchableOpacity>
       </View>
 
@@ -95,7 +95,7 @@ export default function HistoryScreen() {
       <View style={styles.main}>
         {selectedOrder ? (
           <>
-            <Text style={styles.detailTitle}>Order #{selectedOrder.id}</Text>
+            <Text style={styles.detailTitle}>Đơn #{selectedOrder.id}</Text>
             <Text style={styles.detailDate}>{selectedOrder.created_at}</Text>
 
             <View style={styles.divider} />
@@ -114,20 +114,20 @@ export default function HistoryScreen() {
             <View style={styles.divider} />
 
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Total</Text>
+              <Text style={styles.summaryLabel}>Tổng Cộng</Text>
               <Text style={styles.summaryValue}>€{selectedOrder.total.toFixed(2)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Cash Given</Text>
+              <Text style={styles.summaryLabel}>Tiền Khách Đưa</Text>
               <Text style={styles.summaryValue}>€{selectedOrder.cash_given.toFixed(2)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Change</Text>
+              <Text style={styles.summaryLabel}>Tiền Thối</Text>
               <Text style={[styles.summaryValue, { color: '#27ae60' }]}>€{selectedOrder.change.toFixed(2)}</Text>
             </View>
           </>
         ) : (
-          <Text style={styles.empty}>No orders found for this period</Text>
+          <Text style={styles.empty}>Không có đơn hàng trong kỳ này</Text>
         )}
       </View>
     </View>

@@ -45,7 +45,7 @@ export default function ExportScreen() {
 
   const exportCSV = async (month: string) => {
     const orders = getOrders(month);
-    if (orders.length === 0) { Alert.alert('No data', 'No orders for this month'); return; }
+    if (orders.length === 0) { Alert.alert('Không có dữ liệu', 'Không có đơn hàng trong tháng này'); return; }
 
     let csv = 'Order ID,Date,Product,Quantity,Price,Total\n';
     orders.forEach(order => {
@@ -60,12 +60,12 @@ export default function ExportScreen() {
       await FileSystem.writeAsStringAsync(path, csv, { encoding: FileSystem.EncodingType.UTF8 });
       await Sharing.shareAsync(path, { mimeType: 'text/csv', dialogTitle: 'Export CSV' });
       markExported(month);
-    } catch { Alert.alert('Error', 'Export failed'); }
+    } catch { Alert.alert('Lỗi', 'Xuất thất bại'); }
   };
 
   const exportPDF = async (month: string) => {
     const orders = getOrders(month);
-    if (orders.length === 0) { Alert.alert('No data', 'No orders for this month'); return; }
+    if (orders.length === 0) { Alert.alert('Không có dữ liệu', 'Không có đơn hàng trong tháng này'); return; }
 
     const revenue = orders.reduce((sum, o) => sum + o.total, 0);
     let rows = '';
@@ -98,15 +98,15 @@ export default function ExportScreen() {
           </style>
         </head>
         <body>
-          <h1>🛒 Kasse — ${month} Report</h1>
-          <p>Generated: ${new Date().toLocaleDateString('de-DE')} | Orders: ${orders.length} | Revenue: €${revenue.toFixed(2)}</p>
+          <h1>🛒 Thu Ngân — Báo Cáo ${month}</h1>
+          <p>Ngày xuất: ${new Date().toLocaleDateString('de-DE')} | Đơn hàng: ${orders.length} | Doanh thu: €${revenue.toFixed(2)}</p>
           <table>
             <thead>
-              <tr><th>Order</th><th>Date</th><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
+              <tr><th>Đơn</th><th>Ngày</th><th>Sản phẩm</th><th>SL</th><th>Giá</th><th>Thành tiền</th></tr>
             </thead>
             <tbody>${rows}</tbody>
           </table>
-          <p class="summary">Total Revenue: €${revenue.toFixed(2)}</p>
+          <p class="summary">Tổng Doanh Thu: €${revenue.toFixed(2)}</p>
         </body>
       </html>
     `;
@@ -117,7 +117,7 @@ export default function ExportScreen() {
       await FileSystem.moveAsync({ from: uri, to: dest });
       await Sharing.shareAsync(dest, { mimeType: 'application/pdf', dialogTitle: 'Export PDF' });
       markExported(month);
-    } catch { Alert.alert('Error', 'Export failed'); }
+    } catch { Alert.alert('Lỗi', 'Xuất thất bại'); }
   };
 
   const handleDelete = () => {
@@ -127,8 +127,8 @@ export default function ExportScreen() {
     if (unexported.length > 0) {
       const list = unexported.map(m => `• ${m.month}`).join('\n');
       Alert.alert(
-        '⚠️ Unprinted Months',
-        `These months have not been exported yet:\n\n${list}\n\nPlease export them before deleting.`,
+        '⚠️ Chưa Xuất',
+        `Các tháng sau chưa được xuất:\n\n${list}\n\nVui lòng xuất trước khi xóa.`,
         [{ text: 'OK' }]
       );
       return;
@@ -136,17 +136,17 @@ export default function ExportScreen() {
 
     const deletable = months.filter(m => m.month < currentMonth);
     if (deletable.length === 0) {
-      Alert.alert('Nothing to delete', 'No orders from previous months.');
+      Alert.alert('Không có gì để xóa', 'Không có đơn hàng từ các tháng trước.');
       return;
     }
 
     Alert.alert(
-      '⚠️ Delete Old Data',
-      'This will permanently delete all orders from previous months. This cannot be undone.\n\nAre you sure?',
+      '⚠️ Xóa Dữ Liệu Cũ',
+      'Thao tác này sẽ xóa vĩnh viễn tất cả đơn hàng từ các tháng trước. Không thể hoàn tác.\n\nBạn có chắc không?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Hủy', style: 'cancel' },
         {
-          text: 'Delete', style: 'destructive',
+          text: 'Xóa', style: 'destructive',
           onPress: () => {
             db.runSync(
               `DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE strftime('%Y-%m', created_at) < ?)`,
@@ -155,7 +155,24 @@ export default function ExportScreen() {
             db.runSync(`DELETE FROM orders WHERE strftime('%Y-%m', created_at) < ?`, [currentMonth]);
             db.runSync(`DELETE FROM exported_months WHERE year_month < ?`, [currentMonth]);
             loadMonths();
-            Alert.alert('Done', 'Old orders have been deleted.');
+            Alert.alert('Hoàn Tất', 'Đã xóa các đơn hàng cũ.');
+          }
+        }
+      ]
+    );
+  };
+
+  const handleClearAll = () => {
+    Alert.alert(
+      '⚠️ Xóa Toàn Bộ Lịch Sử',
+      'Thao tác này sẽ xóa vĩnh viễn TẤT CẢ đơn hàng và lịch sử bán hàng. Không thể hoàn tác.\n\nBạn có chắc không?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa Hết', style: 'destructive',
+          onPress: () => {
+            db.execSync('DELETE FROM order_items; DELETE FROM orders; DELETE FROM exported_months;');
+            loadMonths();
           }
         }
       ]
@@ -170,16 +187,16 @@ export default function ExportScreen() {
         data={months}
         keyExtractor={item => item.month}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={<Text style={styles.empty}>No order history found.</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>Không có lịch sử đơn hàng.</Text>}
         renderItem={({ item }) => (
           <View style={styles.row}>
             <View style={styles.rowLeft}>
               <Text style={styles.monthLabel}>{item.month}</Text>
               {item.month === currentMonth
-                ? <Text style={styles.badgeCurrent}>Current month</Text>
+                ? <Text style={styles.badgeCurrent}>Tháng hiện tại</Text>
                 : item.exported
-                  ? <Text style={styles.badgeExported}>✅ Exported</Text>
-                  : <Text style={styles.badgePending}>⚠️ Not exported</Text>
+                  ? <Text style={styles.badgeExported}>✅ Đã Xuất</Text>
+                  : <Text style={styles.badgePending}>⚠️ Chưa Xuất</Text>
               }
             </View>
             <View style={styles.rowButtons}>
@@ -193,11 +210,16 @@ export default function ExportScreen() {
           </View>
         )}
         ListFooterComponent={
-          months.length > 0 ? (
-            <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-              <Text style={styles.deleteBtnText}>🗑️ Delete Old Data</Text>
+          <View>
+            {months.length > 0 && (
+              <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+                <Text style={styles.deleteBtnText}>🗑️ Xóa Dữ Liệu Cũ</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.clearAllBtn} onPress={handleClearAll}>
+              <Text style={styles.deleteBtnText}>💣 Xóa Toàn Bộ Lịch Sử</Text>
             </TouchableOpacity>
-          ) : null
+          </View>
         }
       />
     </View>
@@ -227,4 +249,8 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   empty: { color: '#aaa', fontSize: 16, textAlign: 'center', marginTop: 40 },
+  clearAllBtn: {
+    backgroundColor: '#784212', padding: 16, borderRadius: 10,
+    alignItems: 'center', marginTop: 10,
+  },
 });

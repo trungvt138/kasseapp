@@ -15,13 +15,19 @@ export default function CheckoutScreen() {
   const cash = parseFloat(cashGiven) || 0;
   const change = cash - total;
 
+  const localTimestamp = () => {
+    const d = new Date();
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  };
+
   const confirmPayment = () => {
     if (cash < total) return;
 
     // Save order to database
     const orderResult = db.runSync(
-      'INSERT INTO orders (total, cash_given, change) VALUES (?,?,?)',
-      [total, cash, change]
+      'INSERT INTO orders (total, cash_given, change, created_at) VALUES (?,?,?,?)',
+      [total, cash, change, localTimestamp()]
     );
     const orderId = orderResult.lastInsertRowId;
 
@@ -50,7 +56,7 @@ export default function CheckoutScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.left}>
-        <Text style={styles.title}>💳 Checkout</Text>
+        <Text style={styles.title}>💳 Thanh Toán</Text>
 
         {/* Order summary */}
         <ScrollView style={styles.orderList}>
@@ -63,13 +69,13 @@ export default function CheckoutScreen() {
         </ScrollView>
 
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalLabel}>Tổng Cộng</Text>
           <Text style={styles.totalAmount}>€{total.toFixed(2)}</Text>
         </View>
       </View>
 
       <View style={styles.right}>
-        <Text style={styles.sectionTitle}>Cash Given</Text>
+        <Text style={styles.sectionTitle}>Tiền Khách Đưa</Text>
 
         {/* Quick cash buttons */}
         <View style={styles.quickCash}>
@@ -87,7 +93,7 @@ export default function CheckoutScreen() {
         {/* Manual input */}
         <TextInput
           style={styles.cashInput}
-          placeholder="Enter amount"
+          placeholder="Nhập số tiền"
           value={cashGiven}
           onChangeText={setCashGiven}
           keyboardType="decimal-pad"
@@ -95,22 +101,22 @@ export default function CheckoutScreen() {
 
         {/* Change */}
         <View style={[styles.changeBox, change >= 0 ? styles.changeBoxGreen : styles.changeBoxRed]}>
-          <Text style={styles.changeLabel}>Change</Text>
+          <Text style={styles.changeLabel}>Tiền Thối</Text>
           <Text style={styles.changeAmount}>
-            {cash === 0 ? '—' : change >= 0 ? `€${change.toFixed(2)}` : `€${Math.abs(change).toFixed(2)} short`}
+            {cash === 0 ? '—' : change >= 0 ? `€${change.toFixed(2)}` : `Thiếu €${Math.abs(change).toFixed(2)}`}
           </Text>
         </View>
 
         <View style={styles.buttons}>
           <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.cancelBtnText}>← Back</Text>
+            <Text style={styles.cancelBtnText}>← Quay Lại</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.confirmBtn, cash < total && styles.confirmBtnDisabled]}
             disabled={cash < total}
             onPress={confirmPayment}
           >
-            <Text style={styles.confirmBtnText}>✅ Confirm Payment</Text>
+            <Text style={styles.confirmBtnText}>✅ Xác Nhận Thanh Toán</Text>
           </TouchableOpacity>
         </View>
       </View>

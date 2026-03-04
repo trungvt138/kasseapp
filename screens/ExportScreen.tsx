@@ -162,6 +162,23 @@ export default function ExportScreen() {
     );
   };
 
+  const handleClearAll = () => {
+    Alert.alert(
+      '⚠️ Clear All History',
+      'This will permanently delete ALL orders and sales history. This cannot be undone.\n\nAre you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All', style: 'destructive',
+          onPress: () => {
+            db.execSync('DELETE FROM order_items; DELETE FROM orders; DELETE FROM exported_months;');
+            loadMonths();
+          }
+        }
+      ]
+    );
+  };
+
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   return (
@@ -193,11 +210,16 @@ export default function ExportScreen() {
           </View>
         )}
         ListFooterComponent={
-          months.length > 0 ? (
-            <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-              <Text style={styles.deleteBtnText}>🗑️ Delete Old Data</Text>
+          <View>
+            {months.length > 0 && (
+              <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+                <Text style={styles.deleteBtnText}>🗑️ Delete Old Data</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.clearAllBtn} onPress={handleClearAll}>
+              <Text style={styles.deleteBtnText}>💣 Clear All History</Text>
             </TouchableOpacity>
-          ) : null
+          </View>
         }
       />
     </View>
@@ -227,4 +249,8 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   empty: { color: '#aaa', fontSize: 16, textAlign: 'center', marginTop: 40 },
+  clearAllBtn: {
+    backgroundColor: '#784212', padding: 16, borderRadius: 10,
+    alignItems: 'center', marginTop: 10,
+  },
 });

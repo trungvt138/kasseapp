@@ -18,6 +18,7 @@ export default function ProductsScreen() {
   const [productPrice, setProductPrice] = useState('');
   const [productCategory, setProductCategory] = useState<number | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   useEffect(() => {
     loadCategories();
@@ -40,12 +41,23 @@ export default function ProductsScreen() {
     setProducts(result);
   };
 
-  const addCategory = () => {
+  const saveCategory = () => {
     if (!categoryName.trim()) return;
-    db.runSync('INSERT INTO categories (name) VALUES (?)', [categoryName.trim()]);
+    if (editingCategory) {
+      db.runSync('UPDATE categories SET name=? WHERE id=?', [categoryName.trim(), editingCategory.id]);
+    } else {
+      db.runSync('INSERT INTO categories (name) VALUES (?)', [categoryName.trim()]);
+    }
     setCategoryName('');
+    setEditingCategory(null);
     setShowCategoryModal(false);
     loadCategories();
+  };
+
+  const openRenameCategory = (cat: Category) => {
+    setEditingCategory(cat);
+    setCategoryName(cat.name);
+    setShowCategoryModal(true);
   };
 
   const deleteCategory = (id: number) => {
@@ -160,13 +172,17 @@ export default function ProductsScreen() {
             <TouchableOpacity
               style={[styles.categoryItem, selectedCategory === item.id && styles.categorySelected]}
               onPress={() => setSelectedCategory(item.id)}
-              onLongPress={() => deleteCategory(item.id)}
+              onLongPress={() => Alert.alert(item.name, 'Chọn thao tác:', [
+                { text: 'Đổi Tên', onPress: () => openRenameCategory(item) },
+                { text: 'Xóa', style: 'destructive', onPress: () => deleteCategory(item.id) },
+                { text: 'Hủy', style: 'cancel' },
+              ])}
             >
               <Text style={styles.categoryText}>{item.name}</Text>
             </TouchableOpacity>
           )}
         />
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowCategoryModal(true)}>
+        <TouchableOpacity style={styles.addButton} onPress={() => { setEditingCategory(null); setCategoryName(''); setShowCategoryModal(true); }}>
           <Text style={styles.addButtonText}>+ Thêm Danh Mục</Text>
         </TouchableOpacity>
       </View>
@@ -210,7 +226,7 @@ export default function ProductsScreen() {
       <Modal visible={showCategoryModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Danh Mục Mới</Text>
+            <Text style={styles.modalTitle}>{editingCategory ? 'Đổi Tên Danh Mục' : 'Danh Mục Mới'}</Text>
             <TextInput
               style={styles.input}
               placeholder="Tên danh mục"
@@ -221,7 +237,7 @@ export default function ProductsScreen() {
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowCategoryModal(false)}>
                 <Text style={styles.cancelBtnText}>Hủy</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={addCategory}>
+              <TouchableOpacity style={styles.saveBtn} onPress={saveCategory}>
                 <Text style={styles.saveBtnText}>Lưu</Text>
               </TouchableOpacity>
             </View>
